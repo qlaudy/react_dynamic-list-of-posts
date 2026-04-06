@@ -12,28 +12,34 @@ interface Props {
 export const PostDetails: React.FC<Props> = ({ post }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [commentsError, setCommentsError] = useState(false);
+  const [addCommentError, setAddCommentError] = useState(false);
+  const [deleteCommentError, setDeleteCommentError] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
-    setError(false);
+    setAddCommentError(false);
+    setDeleteCommentError(false);
+    setCommentsError(false);
     setShowForm(false);
 
     client
       .get<Comment[]>(`/comments?postId=${post.id}`)
       .then(setComments)
-      .catch(() => setError(true))
+      .catch(() => setCommentsError(true))
       .finally(() => setIsLoading(false));
   }, [post.id]);
 
   const deleteComment = (id: number) => {
     const backup = [...comments];
 
+    setDeleteCommentError(false);
     setComments(prev => prev.filter(c => c.id !== id));
 
     client.delete(`/comments/${id}`).catch(() => {
       setComments(backup);
+      setDeleteCommentError(true);
     });
   };
 
@@ -48,16 +54,26 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
       <div className="block">
         {isLoading && <Loader />}
 
-        {error && (
+        {commentsError && (
           <div className="notification is-danger" data-cy="CommentsError">
             Something went wrong
           </div>
         )}
 
-        {!isLoading && !error && comments.length === 0 && (
+        {!isLoading && !commentsError && comments.length === 0 && (
           <p className="title is-4" data-cy="NoCommentsMessage">
             No comments yet
           </p>
+        )}
+
+        {addCommentError && (
+          <div className="notification is-danger">Unable to add a comment</div>
+        )}
+
+        {deleteCommentError && (
+          <div className="notification is-danger">
+            Unable to delete a comment
+          </div>
         )}
 
         <p className="title is-4">Comments:</p>
@@ -89,7 +105,7 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
           </article>
         ))}
 
-        {!isLoading && !showForm && !error && (
+        {!isLoading && !showForm && !commentsError && (
           <button
             data-cy="WriteCommentButton"
             type="button"
@@ -102,8 +118,12 @@ export const PostDetails: React.FC<Props> = ({ post }) => {
 
         {showForm && (
           <NewCommentForm
-            onAdd={comment => setComments(prev => [...prev, comment])}
+            onAdd={comment => {
+              setComments(prev => [...prev, comment]);
+              setAddCommentError(false);
+            }}
             postId={post.id}
+            onError={() => setAddCommentError(true)}
           />
         )}
       </div>

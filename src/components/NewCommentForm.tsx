@@ -5,9 +5,10 @@ import { client } from '../utils/fetchClient';
 interface Props {
   onAdd: (comment: Comment) => void;
   postId: number;
+  onError: () => void;
 }
 
-export const NewCommentForm: React.FC<Props> = ({ onAdd, postId }) => {
+export const NewCommentForm: React.FC<Props> = ({ onAdd, postId, onError }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [body, setBody] = useState('');
@@ -45,9 +46,18 @@ export const NewCommentForm: React.FC<Props> = ({ onAdd, postId }) => {
       .then(newComment => {
         onAdd(newComment);
 
+        setName('');
+        setEmail('');
         setBody('');
+        setErrors({
+          name: false,
+          email: false,
+          body: false,
+        });
       })
-      .catch(() => {})
+      .catch(() => {
+        onError();
+      })
       .finally(() => {
         setIsSubmitting(false);
       });
@@ -210,11 +220,7 @@ export const NewCommentForm: React.FC<Props> = ({ onAdd, postId }) => {
 
         <div className="control">
           {/* eslint-disable-next-line react/button-has-type */}
-          <button
-            type="reset"
-            className="button is-link is-light"
-            onClick={handleClear}
-          >
+          <button type="reset" className="button is-link is-light">
             Clear
           </button>
         </div>
