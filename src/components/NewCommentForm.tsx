@@ -46,14 +46,7 @@ export const NewCommentForm: React.FC<Props> = ({ onAdd, postId, onError }) => {
       .then(newComment => {
         onAdd(newComment);
 
-        setName('');
-        setEmail('');
         setBody('');
-        setErrors({
-          name: false,
-          email: false,
-          body: false,
-        });
       })
       .catch(() => {
         onError();
